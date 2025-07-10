@@ -5,7 +5,7 @@ from tqdm import tqdm
 from main_scraper import scrape_job 
 
 # === Load file CSV ===
-df = pd.read_csv("batch_01.csv")
+df = pd.read_csv("batch_01 copy.csv")
 urls = df["Job Link"].tolist()
 sources = df["source_file"].tolist()
 inputs = list(zip(urls, sources))

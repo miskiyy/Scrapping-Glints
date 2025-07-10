@@ -50,10 +50,11 @@ def scrape_job(url):
                 break
 
         industry = soup.select_one('a[href*="/id/job-category/"]')
-        employment_type = driver.find_element(By.XPATH, "//div[contains(text(),'Penuh Waktu')]").text
+        # employment_type = driver.find_element(By.XPATH, "//div[contains(text(),'Penuh Waktu')]").text
+        employment_type = get_employment_type(driver)
         description = soup.select_one('div.DraftjsReadersc__ContentContainer-sc-zm0o3p-0')
         requirements = soup.select('div.JobRequirementssc__TagsWrapper-sc-15g5po6-2 div.TagStyle__TagContentWrapper-sc-r1wv7a-1')
-        skills = soup.select('label.tag-content')
+        skills_raw = soup.select('div.TagStyle__TagContentWrapper-sc-r1wv7a-1, label.tag-content, span.tag-content, div.tag-content')
 
         # === JavaScript injection utk salary & tanggal posting ===
         salary = driver.execute_script("""
@@ -63,30 +64,29 @@ def scrape_job(url):
             }
             return null;
         """)
-        tanggal_posting = driver.execute_script("""
-            const spans = document.querySelectorAll('span');
-            for (let s of spans) {
-                if (s.innerText.includes("Lowongan ini")) return s.innerText;
-            }
-            return null;
-        """)
-
+        # tanggal_posting = driver.execute_script("""
+        #     const spans = document.querySelectorAll('span');
+        #     for (let s of spans) {
+        #         if (s.innerText.includes("Lowongan ini")) return s.innerText;
+        #     }
+        #     return null;
+        # """)
         return {
             "url": url,
             "posisi": posisi.get_text(strip=True) if posisi else None,
             "company": company.get_text(strip=True) if company else None,
             "lokasi": lokasi,
             "industry": industry.get_text(strip=True) if industry else None,
-            "employment_type": get_employment_type(driver),
-            "tanggal_posting": tanggal_posting or None,
+            "employment_type": employment_type,
+            # "tanggal_posting": tanggal_posting or None,
             "salary": salary or None,
             "description": description.get_text(" ", strip=True) if description else None,
             "requirements": ", ".join([r.get_text(strip=True) for r in requirements]) if requirements else None,
-            "skills": ", ".join([s.get_text(strip=True) for s in skills]) if skills else None,
+            "skills": ", ".join([s.get_text(strip=True) for s in skills_raw]) if skills_raw else None,
         }
 
     except Exception as e:
         return {"url": url, "error": str(e)}
     finally:
         driver.quit()
-        time.sleep(random.uniform(1.5, 3.0))  # delay biar manusiawi
+        time.sleep(random.uniform(1.5, 3.0))
